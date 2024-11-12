@@ -4,13 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>List of Files</title>
-  <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Load React and ReactDOM from CDN -->
+  <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/javascript">
+    // List of files to display
     const fileList = [
       { name: 'AIRPORT-SYSTEMS-remove-paragraph.docx', url: 'https://abhichek.github.io/fbf-test-files/AIRPORT-SYSTEMS-remove-paragraph.docx' },
       { name: 'cleint2.xlsx', url: 'https://abhichek.github.io/fbf-test-files/cleint2.xlsx' },
@@ -44,25 +46,25 @@
       { name: 'WSR_Comet_Rocks_-_28th_June_24_page-0002.pdf', url: 'https://abhichek.github.io/fbf-test-files/WSR_Comet_Rocks_-_28th_June_24_page-0002.pdf' }
     ];
 
+    // React component to render the file list
     const FileList = () => {
       return (
-        <div>
-          <h1>List of Files</h1>
-          <ul>
-            {fileList.map((file, index) => (
-              <li key={index}>
-                <a href={file.url} target="_blank" rel="noopener noreferrer">
-                  {file.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+        React.createElement('div', null,
+          React.createElement('h1', null, 'List of Files'),
+          React.createElement('ul', null,
+            fileList.map((file, index) =>
+              React.createElement('li', { key: index },
+                React.createElement('a', { href: file.url, target: '_blank', rel: 'noopener noreferrer' }, file.name)
+              )
+            )
+          )
+        )
       );
     };
 
+    // Render the component once the DOM content is loaded
     document.addEventListener("DOMContentLoaded", function() {
-      ReactDOM.render(<FileList />, document.getElementById("root"));
+      ReactDOM.render(React.createElement(FileList), document.getElementById("root"));
     });
   </script>
 </body>
