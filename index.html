@@ -34,6 +34,7 @@
       button {
         margin-left: 10px;
         cursor: pointer;
+        padding: 5px 10px;
       }
       button:hover {
         background-color: #f0f0f0;
@@ -47,6 +48,7 @@
     <div id="root"></div>
 
     <script type="text/javascript">
+      // List of files
       const fileList = [
         {
           name: "AIRPORT-SYSTEMS-remove-paragraph.docx",
@@ -175,8 +177,8 @@
         medium: 20 * 1024 * 1024,
       }; // 5MB and 20MB in bytes
 
-      // React Component
-      const FileList = () => {
+      // React component to group and render files
+      function FileList() {
         const [groupedFiles, setGroupedFiles] = React.useState({
           small: [],
           medium: [],
@@ -186,42 +188,35 @@
 
         // Fetch file sizes and group them
         React.useEffect(() => {
-          const fetchFileSizes = async () => {
+          async function fetchFileSizes() {
             const sizeGroups = { small: [], medium: [], large: [] };
-            const batchSize = 15;
 
-            // Process files in batches of 15
-            for (let i = 0; i < fileList.length; i += batchSize) {
-              const batch = fileList.slice(i, i + batchSize);
-              
-              const batchPromises = batch.map(async (file) => {
-                try {
-                  const response = await fetch(file.url, { method: "HEAD" });
-                  const size = parseInt(
-                    response.headers.get("Content-Length"),
-                    10
-                  );
+            const fetchPromises = fileList.map(async (file) => {
+              try {
+                const response = await fetch(file.url, { method: "HEAD" });
+                const size = parseInt(
+                  response.headers.get("Content-Length"),
+                  10
+                );
 
-                  if (size < SIZE_THRESHOLD.small) {
+                if (!isNaN(size)) {
+                  if (size < SIZE_THRESHOLD.small)
                     sizeGroups.small.push({ ...file, size });
-                  } else if (size < SIZE_THRESHOLD.medium) {
+                  else if (size < SIZE_THRESHOLD.medium)
                     sizeGroups.medium.push({ ...file, size });
-                  } else {
-                    sizeGroups.large.push({ ...file, size });
-                  }
-                } catch (err) {
-                  console.error(`Failed to fetch size for ${file.name}`, err);
+                  else sizeGroups.large.push({ ...file, size });
+                } else {
                   sizeGroups.small.push({ ...file, size: "Unknown" });
                 }
-              });
+              } catch {
+                sizeGroups.small.push({ ...file, size: "Unknown" });
+              }
+            });
 
-              // Wait for current batch to complete before processing next batch
-              await Promise.all(batchPromises);
-            }
-
+            await Promise.all(fetchPromises);
             setGroupedFiles(sizeGroups);
             setLoading(false);
-          };
+          }
 
           fetchFileSizes();
         }, []);
@@ -230,33 +225,45 @@
         const copyToClipboard = (url) => {
           navigator.clipboard
             .writeText(url)
-            .then(() => {
-              alert("Copied to clipboard: " + url);
-            })
-            .catch((err) => console.error("Failed to copy URL", err));
+            .then(() => alert("Copied to clipboard: " + url))
+            .catch(() => alert("Failed to copy URL"));
         };
 
-        const renderGroup = (group, title) => (
-          <>
-            <h2 className="group-title">{title}</h2>
-            <ul>
-              {group.map((file, index) => (
-                <li key={index}>
-                  <a href={file.url} target="_blank" rel="noopener noreferrer">
-                    {file.name} (
-                    {file.size !== "Unknown"
-                      ? (file.size / 1024 / 1024).toFixed(2) + " MB"
-                      : "Size Unknown"}
-                    )
-                  </a>
-                  <button onClick={() => copyToClipboard(file.url)}>
-                    Copy
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        );
+        // Render a group of files
+        const renderGroup = (title, group) =>
+          React.createElement(
+            "div",
+            null,
+            React.createElement("h2", { className: "group-title" }, title),
+            React.createElement(
+              "ul",
+              null,
+              group.map((file, index) =>
+                React.createElement(
+                  "li",
+                  { key: index },
+                  React.createElement(
+                    "a",
+                    {
+                      href: file.url,
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    },
+                    `${file.name} (${
+                      file.size !== "Unknown"
+                        ? (file.size / 1024 / 1024).toFixed(2) + " MB"
+                        : "Size Unknown"
+                    })`
+                  ),
+                  React.createElement(
+                    "button",
+                    { onClick: () => copyToClipboard(file.url) },
+                    "Copy"
+                  )
+                )
+              )
+            )
+          );
 
         if (loading)
           return React.createElement("div", null, "Loading file sizes...");
@@ -265,13 +272,13 @@
           "div",
           null,
           React.createElement("h1", null, "List of Files"),
-          renderGroup(groupedFiles.small, "Small Files (< 5 MB)"),
-          renderGroup(groupedFiles.medium, "Medium Files (5 MB - 20 MB)"),
-          renderGroup(groupedFiles.large, "Large Files (>= 20 MB)")
+          renderGroup("Small Files (< 5 MB)", groupedFiles.small),
+          renderGroup("Medium Files (5 MB - 20 MB)", groupedFiles.medium),
+          renderGroup("Large Files (>= 20 MB)", groupedFiles.large)
         );
-      };
+      }
 
-      // Render the component once the DOM content is loaded
+      // Render the React component
       document.addEventListener("DOMContentLoaded", function () {
         ReactDOM.render(
           React.createElement(FileList),
